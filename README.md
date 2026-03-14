@@ -86,6 +86,7 @@ Run:
 ```bash
 docker compose build
 ```
+This command builds the image defined in `compose.yaml`.
 
 ---
 
@@ -94,3 +95,89 @@ Run:
 ```bash
 docker compose up -d
 ```
+This command starts the service in detached mode.
+To start it in the foreground instead, run:
+```bash
+docker compose up
+```
+
+---
+
+## Check Running Services
+Run:
+```bash
+docker compose ps
+```
+This shows the current status of the services defined in the Compose project.
+
+---
+
+## Read Logs
+Run:
+```bash
+docker compose logs
+```
+To follow logs in real time:
+```bash
+docker compose logs -f toolbox
+```
+
+---
+
+## Enter the Running Container
+Run:
+```bash
+docker compose exec toolbox sh
+```
+Once inside the container, you can test a few commands such as:
+```bash
+pwd
+ls -la
+env | grep LAB_MESSAGE
+which curl
+which bash
+cat /usr/local/bin/welcome.sh
+```
+Exit the container shell with:
+```bash
+exit
+```
+
+---
+
+## Stop and Clean Up
+Run:
+```bash
+docker compose down
+```
+This stops and removes the containers and networks created by Docker Compose for this project.
+
+---
+
+## Useful Daily Commands
+### Rebuild after changing the Dockerfile
+```bash
+docker compose build
+```
+### Rebuild and restart
+```bash
+docker compose up -d --build
+```
+### Stop services
+```bash
+docker compose down
+```
+### View container logs
+```bash
+docker compose logs -f
+```
+### Open a shell in the running container
+```bash
+docker compose exec toolbox sh
+```
+
+---
+
+## Notes
+This repository is intentionally simple and educational.
+The goal is to build strong fundamentals before moving to more advanced and production-like setups.
