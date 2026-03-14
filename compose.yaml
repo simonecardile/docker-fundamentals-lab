@@ -1,0 +1,12 @@
+services:
+  toolbox:
+    build:
+      context: .
+      dockerfile: docker/toolbox/Dockerfile
+    env_file:
+      - .env
+    environment:
+      LAB_MESSAGE: ${LAB_MESSAGE}
+    tty: true
+    stdin_open: true
+    working_dir: /workspace
