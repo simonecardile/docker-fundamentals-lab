@@ -1,0 +1,7 @@
+.git
+.gitignore
+.env
+README.md
+lab/
+Thumbs.db
+.DS_Store

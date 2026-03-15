@@ -10,3 +10,33 @@ services:
     tty: true
     stdin_open: true
     working_dir: /workspace
+    volumes:
+      - ./:/workspace/app
+      - toolbox_data:/data
+    networks:
+      - lab_net
+    depends_on:
+      web:
+        condition: service_healthy
+
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./lab/web/index.html:/usr/share/nginx/html/index.html:ro
+    ports:
+      - "8080:80"
+    networks:
+      - lab_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  toolbox_data:
+
+networks:
+  lab_net:
+    driver: bridge

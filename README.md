@@ -1,24 +1,31 @@
 # docker-fundamentals-lab
-- building custom images with a `Dockerfile`
-- running containers with Docker Compose
-- using environment variables
-- reading logs
-- entering running containers
-- stopping and cleaning up services
 
----
+A public learning repository built to practice Docker fundamentals through a small multi-service lab.
 
-## Current Scope
-At the current stage, this lab includes:
-- a custom Docker image based on Alpine Linux
-- a simple startup script copied into the image
-- a `compose.yaml` file to build and run the service
-- a `.env` file for environment variables
-- basic Docker Compose commands for daily usage
+## Goal
 
----
+This repository was created to learn Docker hands-on, focusing on:
+
+- custom images with `Dockerfile`
+- multi-service applications with Docker Compose
+- environment variables
+- bind mounts
+- named volumes
+- custom networks
+- healthchecks
+- service startup order with `depends_on` and `service_healthy`
+- basic troubleshooting commands
+
+## Tech Stack
+
+- Docker Desktop
+- WSL 2
+- Docker Compose
+- Alpine Linux
+- Nginx
 
 ## Repository Structure
+
 ```text
 docker-fundamentals-lab/
 ├─ docker/
@@ -26,158 +33,207 @@ docker-fundamentals-lab/
 │     └─ Dockerfile
 ├─ scripts/
 │  └─ welcome.sh
-├─ .env
+├─ lab/
+│  └─ web/
+│     └─ index.html
+├─ .dockerignore
+├─ .env.example
 ├─ .gitignore
 ├─ compose.yaml
 └─ README.md
 ```
 
----
+## Services
 
-## Requirements
-Before using this repository, make sure you have:
-- Docker Desktop installed and running
-- WSL 2 enabled
-- Docker Desktop integration enabled for your WSL distribution
-- VS Code (recommended)
-- A Linux shell inside WSL for running commands
-Recommended setup:
-- source code stored inside the Linux filesystem (WSL), not under `C:\`
-- commands run from the VS Code integrated terminal connected to WSL
+### toolbox
+A custom image based on Alpine Linux used as a learning container.
 
----
-
-## Concepts Covered in This Step
-### Image
-An image is the build artifact created from a `Dockerfile`.
-It contains the filesystem, packages, tools, and default startup command.
-### Container
-A container is a running instance of an image.
-### Dockerfile
-A `Dockerfile` defines how the image is built.
-### Docker Compose
-Docker Compose defines and runs services using a YAML file.
-### Environment Variables
-The `.env` file is used to provide values to the Compose configuration and the running container.
-
----
-
-## Files Explained
-### `docker/toolbox/Dockerfile`
-Builds a small custom image based on Alpine Linux and installs a few useful tools:
+It includes:
 - `bash`
 - `curl`
 - `bind-tools`
-It also copies a startup script into the image and runs it when the container starts.
-### `scripts/welcome.sh`
-A small shell script used to confirm that:
-- the container is running
-- environment variables are available
-- the working directory is correct
-### `.env`
-Stores simple environment variables used by Docker Compose.
-### `compose.yaml`
-Defines the `toolbox` service and tells Docker Compose how to build and run it.
 
----
+### web
+A simple Nginx container serving a static HTML page.
 
-## Build the Image
-Run:
-```bash
-docker compose build
+## Concepts Covered
+
+### Dockerfile
+The `toolbox` image is built from a custom `Dockerfile`.
+
+### Docker Compose
+The project uses `compose.yaml` to define services, volumes, networks, and startup dependencies.
+
+### Environment Variables
+Environment values are loaded from a local `.env` file.
+
+### Bind Mount
+The whole repository is mounted into the container at:
+
+```text
+/workspace/app
 ```
-This command builds the image defined in `compose.yaml`.
 
----
+This allows real-time file changes from the host.
 
-## Start the Service
-Run:
+### Named Volume
+The `toolbox_data` volume is mounted at:
+
+```text
+/data
+```
+
+This is used to demonstrate persistent Docker-managed storage.
+
+### Network Between Containers
+Both services share a custom bridge network:
+
+```text
+dockerfundamentalslab_lab_net
+```
+
+The `toolbox` container can reach the `web` service by hostname:
+
+```bash
+curl http://web
+```
+
+### Healthcheck
+The `web` service exposes a healthcheck that verifies that Nginx is responding locally.
+
+### Service Startup Order
+`toolbox` depends on `web` with:
+
+```yaml
+depends_on:
+  web:
+    condition: service_healthy
+```
+
+This means `toolbox` starts only after `web` is healthy.
+
+## Requirements
+
+- Docker Desktop installed and running
+- WSL 2 enabled
+- Docker Desktop integration enabled for your WSL distribution
+- VS Code recommended
+- source code stored inside the Linux filesystem of WSL
+
+## Local Setup
+
+Create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Then start the project:
+
 ```bash
 docker compose up -d
 ```
-This command starts the service in detached mode.
-To start it in the foreground instead, run:
+
+## Useful Commands
+
+### Show the resolved Compose configuration
 ```bash
-docker compose up
+docker compose config
 ```
 
----
-
-## Check Running Services
-Run:
-```bash
-docker compose ps
-```
-This shows the current status of the services defined in the Compose project.
-
----
-
-## Read Logs
-Run:
-```bash
-docker compose logs
-```
-To follow logs in real time:
-```bash
-docker compose logs -f toolbox
-```
-
----
-
-## Enter the Running Container
-Run:
-```bash
-docker compose exec toolbox sh
-```
-Once inside the container, you can test a few commands such as:
-```bash
-pwd
-ls -la
-env | grep LAB_MESSAGE
-which curl
-which bash
-cat /usr/local/bin/welcome.sh
-```
-Exit the container shell with:
-```bash
-exit
-```
-
----
-
-## Stop and Clean Up
-Run:
-```bash
-docker compose down
-```
-This stops and removes the containers and networks created by Docker Compose for this project.
-
----
-
-## Useful Daily Commands
-### Rebuild after changing the Dockerfile
+### Build images
 ```bash
 docker compose build
 ```
-### Rebuild and restart
+
+### Start services
+```bash
+docker compose up -d
+```
+
+### Start services and rebuild first
 ```bash
 docker compose up -d --build
 ```
-### Stop services
+
+### Stop services without removing containers
+```bash
+docker compose stop
+```
+
+### Start existing stopped containers
+```bash
+docker compose start
+```
+
+### Restart services
+```bash
+docker compose restart
+```
+
+### Tear down services and network
 ```bash
 docker compose down
 ```
-### View container logs
+
+### Tear down services, network, and named volumes
 ```bash
+docker compose down -v
+```
+
+### Check service status
+```bash
+docker compose ps
+```
+
+### Check logs
+```bash
+docker compose logs
 docker compose logs -f
 ```
-### Open a shell in the running container
+
+### Open a shell inside toolbox
 ```bash
 docker compose exec toolbox sh
 ```
 
----
+## Troubleshooting
+
+### Validate the Compose configuration
+```bash
+docker compose config >/dev/null && echo "CONFIG OK"
+```
+
+### Inspect container health
+```bash
+docker inspect dockerfundamentalslab-web-1 --format '{{json .State.Health}}'
+```
+
+### List containers
+```bash
+docker ps
+docker ps -a
+```
+
+### List Docker resources
+```bash
+docker images
+docker volume ls
+docker network ls
+```
+
+## What I learned in this repository
+
+- the difference between an image and a container
+- how Docker builds an image from a `Dockerfile`
+- how Docker Compose defines and runs multiple services
+- how bind mounts differ from named volumes
+- how containers communicate over a Docker network
+- how healthchecks work
+- how `depends_on` with `service_healthy` affects startup order
+- how to troubleshoot with `config`, `ps`, `logs`, and `inspect`
 
 ## Notes
-This repository is intentionally simple and educational.
-The goal is to build strong fundamentals before moving to more advanced and production-like setups.
+
+This repository is intentionally small and educational.
+The goal is not production readiness, but strong operational fundamentals.
